@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import {
   analyzePrompt,
+  DEFAULT_MODEL,
+  MODEL_IDS,
+  MODEL_PRICING,
+  MODEL_PROFILES,
   type AnalysisResult,
   type CompressionStyle,
   type ModelId,
@@ -21,7 +25,7 @@ class ContextDoctorProvider
   >();
   readonly onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
   private currentResult: AnalysisResult | undefined;
-  private model: ModelId = "gpt-4o";
+  private model: ModelId = DEFAULT_MODEL;
   private compressionStyle: CompressionStyle = "concise";
   private dashboard: vscode.WebviewPanel | undefined;
   private warningDecoration: vscode.TextEditorDecorationType;
@@ -127,7 +131,10 @@ class ContextDoctorProvider
     const cheapest = Object.entries(result.costEstimates).sort(([, a], [, b]) => a - b)[0];
 
     const costRows = Object.entries(result.costEstimates)
-      .map(([model, cost]) => `<tr><td>${escapeHtml(model)}</td><td>$${cost.toFixed(6)}</td></tr>`)
+      .map(
+        ([model, cost]) =>
+          `<tr><td>${escapeHtml(MODEL_PRICING[model]?.label ?? model)}</td><td>$${cost.toFixed(6)}</td></tr>`
+      )
       .join("");
     const segmentRows = result.segments
       .map(
@@ -232,7 +239,7 @@ class ContextDoctorProvider
   <header>
     <div>
       <h1>Context Doctor</h1>
-      <div class="muted">Model ${escapeHtml(this.model)} | Style ${escapeHtml(this.compressionStyle)}</div>
+      <div class="muted">Model ${escapeHtml(MODEL_PROFILES[this.model].label)} | Style ${escapeHtml(this.compressionStyle)}</div>
     </div>
     <div class="actions">
       <button data-command="optimize">Apply fixes</button>
@@ -251,7 +258,7 @@ class ContextDoctorProvider
 
   <div class="callout">
     Largest segment: ${largestSegment ? `${escapeHtml(largestSegment.label)} (${largestSegment.tokenCount} tokens)` : "none"}.
-    Cheapest listed model: ${cheapest ? `${escapeHtml(cheapest[0])} ($${cheapest[1].toFixed(6)})` : "none"}.
+    Cheapest listed model: ${cheapest ? `${escapeHtml(MODEL_PRICING[cheapest[0]]?.label ?? cheapest[0])} ($${cheapest[1].toFixed(6)})` : "none"}.
   </div>
 
   <h2>Cost</h2>
@@ -335,7 +342,7 @@ class ContextDoctorProvider
   getChildren(): AnalysisNode[] {
     if (!this.currentResult) {
       return [
-        { kind: "model", label: `Model: ${this.model}`, description: "Click to change" },
+        { kind: "model", label: `Model: ${MODEL_PROFILES[this.model].label}`, description: "Click to change" },
         {
           kind: "style",
           label: `Style: ${this.compressionStyle}`,
@@ -345,7 +352,7 @@ class ContextDoctorProvider
     }
 
     return [
-      { kind: "model", label: `Model: ${this.model}`, description: "Click to change" },
+      { kind: "model", label: `Model: ${MODEL_PROFILES[this.model].label}`, description: "Click to change" },
       {
         kind: "style",
         label: `Style: ${this.compressionStyle}`,
@@ -437,12 +444,18 @@ export function activate(context: vscode.ExtensionContext): void {
       );
     }),
     vscode.commands.registerCommand("contextDoctor.selectModel", async () => {
-      const picked = await vscode.window.showQuickPick(["gpt-4o", "claude-3-5", "gemini-1-5", "llama-3"]);
+      const picked = await vscode.window.showQuickPick(
+        MODEL_IDS.map((id) => ({
+          label: MODEL_PROFILES[id].label,
+          description: `${id} • ${MODEL_PROFILES[id].modelLimit.toLocaleString()} ctx`,
+          id
+        }))
+      );
       if (!picked) {
         return;
       }
-      await vscode.workspace.getConfiguration("contextDoctor").update("defaultModel", picked, true);
-      provider.setModel(picked as ModelId);
+      await vscode.workspace.getConfiguration("contextDoctor").update("defaultModel", picked.id, true);
+      provider.setModel(picked.id);
     }),
     vscode.commands.registerCommand("contextDoctor.selectCompressionStyle", async () => {
       const picked = await vscode.window.showQuickPick(["standard", "concise", "caveman", "ultra"]);
@@ -492,7 +505,7 @@ export function activate(context: vscode.ExtensionContext): void {
 function getConfiguredModel(): ModelId {
   return vscode.workspace
     .getConfiguration("contextDoctor")
-    .get<ModelId>("defaultModel", "gpt-4o");
+    .get<ModelId>("defaultModel", DEFAULT_MODEL);
 }
 
 function getConfiguredStyle(): CompressionStyle {

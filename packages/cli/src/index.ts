@@ -4,7 +4,10 @@ import { join } from "node:path";
 
 import {
   analyzePrompt,
+  DEFAULT_MODEL,
+  MODEL_IDS,
   MODEL_PROFILES,
+  normalizeModelId,
   type AnalysisResult,
   type CompressionStyle,
   type ModelId
@@ -53,10 +56,11 @@ async function runAnalysis(
 }
 
 function parseModel(model: string): ModelId {
-  if (model in MODEL_PROFILES) {
-    return model as ModelId;
+  const normalized = normalizeModelId(model);
+  if (normalized) {
+    return normalized;
   }
-  throw new Error(`Unknown model "${model}". Use: ${Object.keys(MODEL_PROFILES).join(", ")}`);
+  throw new Error(`Unknown model "${model}". Use: ${MODEL_IDS.join(", ")}`);
 }
 
 function parseFormat(format: string): OutputFormat {
@@ -80,7 +84,7 @@ function completionScript(shell: string): string {
   if (shell === "fish") {
     return [
       `complete -c context-doctor -f -a "${commands}"`,
-      `complete -c context-doctor -l model -a "${Object.keys(MODEL_PROFILES).join(" ")}"`,
+      `complete -c context-doctor -l model -a "${MODEL_IDS.join(" ")}"`,
       `complete -c context-doctor -l format -a "table json markdown"`,
       `complete -c context-doctor -l style -a "standard concise caveman ultra"`
     ].join("\n");
@@ -89,14 +93,14 @@ function completionScript(shell: string): string {
   if (shell === "powershell" || shell === "pwsh") {
     return `Register-ArgumentCompleter -Native -CommandName context-doctor -ScriptBlock {
   param($wordToComplete)
-  "${commands} ${options} ${Object.keys(MODEL_PROFILES).join(" ")} table json markdown standard concise caveman ultra".Split(" ") |
+  "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise caveman ultra".Split(" ") |
     Where-Object { $_ -like "$wordToComplete*" } |
     ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", $_) }
 }`;
   }
 
   return `_context_doctor() {
-  COMPREPLY=($(compgen -W "${commands} ${options} ${Object.keys(MODEL_PROFILES).join(" ")} table json markdown standard concise caveman ultra" -- "\${COMP_WORDS[COMP_CWORD]}"))
+  COMPREPLY=($(compgen -W "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise caveman ultra" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
 complete -F _context_doctor context-doctor`;
 }
@@ -172,7 +176,7 @@ Examples:
 program
   .command("analyze")
   .argument("<file>", "file path or - for stdin")
-  .option("--model <model>", "target model", "gpt-4o")
+  .option("--model <model>", "target model", DEFAULT_MODEL)
   .option("--format <format>", "table|json|markdown", "table")
   .option("--style <style>", "standard|concise|caveman|ultra", "standard")
   .option("--fix", "print optimized prompt")
@@ -196,7 +200,7 @@ program
   .command("compare")
   .argument("<file1>")
   .argument("<file2>")
-  .option("--model <model>", "target model", "gpt-4o")
+  .option("--model <model>", "target model", DEFAULT_MODEL)
   .action(async (file1, file2, options) => {
     const model = parseModel(options.model);
     const [left, right] = await Promise.all([readInput(file1), readInput(file2)]);
@@ -221,7 +225,7 @@ program
   .command("optimize")
   .argument("<file>")
   .requiredOption("-o, --output <output>", "output file")
-  .option("--model <model>", "target model", "gpt-4o")
+  .option("--model <model>", "target model", DEFAULT_MODEL)
   .option("--style <style>", "standard|concise|caveman|ultra", "concise")
   .action(async (file, options) => {
     const model = parseModel(options.model);
@@ -256,7 +260,7 @@ program
    It estimates tokens removed if fixes are applied. Use --fix to preview optimized text.
 
 5. Cost
-   It estimates input cost for GPT-4o, Claude Sonnet 3.5, Gemini 1.5 Pro.
+   It estimates input cost across supported OpenAI, Anthropic, Google, Moonshot, and local model profiles.
 
 Main commands:
   context-doctor analyze <file>              show readable report
@@ -284,7 +288,7 @@ program
       join(root, ".context-doctorrc.json"),
       JSON.stringify(
         {
-          model: "gpt-4o",
+          model: DEFAULT_MODEL,
           style: "concise",
           include: ["**/*.md", "**/*.txt", "**/*.prompt"],
           failOnGrowthPercent: 20
@@ -302,7 +306,7 @@ program
         join(vscodeDir, "settings.json"),
         JSON.stringify(
           {
-            "contextDoctor.defaultModel": "gpt-4o",
+            "contextDoctor.defaultModel": DEFAULT_MODEL,
             "contextDoctor.compressionStyle": "concise",
             "contextDoctor.autoAnalyze": true
           },

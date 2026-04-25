@@ -5,7 +5,8 @@ import {
   applyOptimizations,
   compressPrompt,
   countTokensForEncoding,
-  detectWaste
+  detectWaste,
+  normalizeModelId
 } from "../src/index";
 
 const SAMPLE_PROMPT = `<system>
@@ -43,10 +44,18 @@ describe("token counting", () => {
   });
 
   it("includes cost estimates", () => {
-    const result = analyzePrompt("hello world", { model: "gpt-4o" });
-    expect(result.costEstimates["gpt-4o"]).toBeGreaterThan(0);
-    expect(result.costEstimates["claude-sonnet-3-5"]).toBeGreaterThan(0);
-    expect(result.costEstimates["gemini-1-5-pro"]).toBeGreaterThan(0);
+    const result = analyzePrompt("hello world", { model: "gpt-5.5" });
+    expect(result.costEstimates["gpt-5.5"]).toBeGreaterThan(0);
+    expect(result.costEstimates["claude-opus-4.7"]).toBeGreaterThan(0);
+    expect(result.costEstimates["claude-sonnet-4.6"]).toBeGreaterThan(0);
+    expect(result.costEstimates["gemini-2.5-pro"]).toBeGreaterThan(0);
+    expect(result.costEstimates["kimi-k2.6"]).toBeGreaterThan(0);
+  });
+
+  it("normalizes model aliases", () => {
+    expect(normalizeModelId("5.5 chatgpt")).toBe("gpt-5.5");
+    expect(normalizeModelId("claude 4.7")).toBe("claude-opus-4.7");
+    expect(normalizeModelId("kimi 2.6")).toBe("kimi-k2.6");
   });
 });
 

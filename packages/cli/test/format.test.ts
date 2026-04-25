@@ -31,9 +31,10 @@ const result: AnalysisResult = {
     }
   ],
   costEstimates: {
-    "gpt-4o": 0.003,
-    "claude-sonnet-3-5": 0.0036,
-    "gemini-1-5-pro": 0.0015
+    "gpt-5.5": 0.0024,
+    "claude-opus-4.7": 0.018,
+    "gemini-2.5-pro": 0.0015,
+    "kimi-k2.6": 0.00072
   },
   estimatedSavings: 6,
   optimizedPrompt: "must"

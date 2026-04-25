@@ -38,12 +38,12 @@ Local source install:
 - Waste detection for repeated instructions, filler phrasing, duplicate context, whitespace bloat, weak system prompts, noisy code comments.
 - Auto-optimization pipeline with estimated savings, fixed prompt output, watch mode, compare mode, shell completions, interactive TUI, VS Code diagnostics.
 - Compression styles: `standard`, `concise`, `caveman`, `ultra`.
-- Cost estimates for GPT-4o, Claude Sonnet 3.5, and Gemini 1.5 Pro.
+- Cost estimates for GPT-5.5, GPT-5.4, GPT-4o, Claude Opus 4.7, Claude Sonnet 4.6, Gemini 2.5 Pro, and Kimi K2.6.
 
 ## Quick usage
 
 ```bash
-context-doctor analyze prompt.txt --model gpt-4o
+context-doctor analyze prompt.txt --model gpt-5.5
 ```
 
 ```text
@@ -83,12 +83,12 @@ context-doctor analyze prompt.txt --format markdown --fix
 ```
 
 ```bash
-context-doctor compare prompt-before.txt prompt-after.txt --model claude-3-5
+context-doctor compare prompt-before.txt prompt-after.txt --model claude-opus-4.7
 ```
 
 ```json
 {
-  "model": "claude-3-5",
+  "model": "claude-opus-4.7",
   "before": 9288,
   "after": 7310,
   "delta": -1978,
@@ -97,7 +97,7 @@ context-doctor compare prompt-before.txt prompt-after.txt --model claude-3-5
 ```
 
 ```bash
-context-doctor optimize CLAUDE.md -o CLAUDE.compact.md --model claude-3-5 --style ultra
+context-doctor optimize CLAUDE.md -o CLAUDE.compact.md --model claude-opus-4.7 --style ultra
 ```
 
 ```text
@@ -108,10 +108,16 @@ Wrote optimized prompt to CLAUDE.compact.md. Saved ~1289 tokens.
 
 | Model | Tokenizer | Context window |
 | --- | --- | ---: |
+| GPT-5.5 | `o200k_base` | 400,000 |
+| GPT-5.4 | `o200k_base` | 400,000 |
 | GPT-4o | `o200k_base` | 128,000 |
-| Claude 3.5 | `@anthropic-ai/tokenizer` | 200,000 |
-| Gemini 1.5 | `o200k_base` estimator | 1,000,000 |
+| Claude Opus 4.7 | `@anthropic-ai/tokenizer` | 200,000 |
+| Claude Sonnet 4.6 | `@anthropic-ai/tokenizer` | 200,000 |
+| Gemini 2.5 Pro | `o200k_base` estimator | 1,000,000 |
+| Kimi K2.6 | `o200k_base` estimator | 256,000 |
 | Llama 3 | `cl100k_base` estimator | 128,000 |
+
+Aliases accepted in CLI and MCP: `5.5 chatgpt`, `claude 4.7`, `kimi 2.6`, `gemini 2.5 pro`.
 
 ## How It Works
 
@@ -129,7 +135,7 @@ Use `--style concise` for normal cleanup, `--style caveman` for agent memory, an
 `context-doctor` estimates input cost per call from prompt tokens. Prices are stored in core so CLI, library, VS Code, and MCP return the same numbers.
 
 ```bash
-context-doctor analyze prompt.txt --model gpt-4o
+context-doctor analyze prompt.txt --model gpt-5.5
 ```
 
 ```text
@@ -137,18 +143,20 @@ Cost Estimate
 ┌──────────────────────┬──────────────────────┐
 │ Model                │ Estimated input cost │
 ├──────────────────────┼──────────────────────┤
-│ gpt-4o               │ $0.001205            │
-│ claude-sonnet-3-5    │ $0.001446            │
-│ gemini-1-5-pro       │ $0.000603            │
+│ GPT-5.5              │ $0.000964            │
+│ Claude Opus 4.7      │ $0.007230            │
+│ Gemini 2.5 Pro       │ $0.000603            │
+│ Kimi K2.6            │ $0.000289            │
 └──────────────────────┴──────────────────────┘
 ```
 
 Library output includes:
 
 ```ts
-result.costEstimates["gpt-4o"];
-result.costEstimates["claude-sonnet-3-5"];
-result.costEstimates["gemini-1-5-pro"];
+result.costEstimates["gpt-5.5"];
+result.costEstimates["claude-opus-4.7"];
+result.costEstimates["gemini-2.5-pro"];
+result.costEstimates["kimi-k2.6"];
 ```
 
 ## GitHub Action
@@ -251,7 +259,7 @@ context-doctor/
 ```ts
 import { analyzePrompt } from "@context-doctor/core";
 
-const result = analyzePrompt(rawPrompt, { model: "gpt-4o" });
+const result = analyzePrompt(rawPrompt, { model: "gpt-5.5" });
 
 console.log(result.totalTokens);
 console.log(result.estimatedSavings);

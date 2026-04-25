@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { analyzePrompt, type CompressionStyle, type ModelId } from "@context-doctor/core";
+import {
+  analyzePrompt,
+  DEFAULT_MODEL,
+  MODEL_IDS,
+  type CompressionStyle,
+  type ModelId
+} from "@context-doctor/core";
 import { z } from "zod";
 
-const modelSchema = z.enum(["gpt-4o", "claude-3-5", "gemini-1-5", "llama-3"]);
+const modelSchema = z.enum(MODEL_IDS as [ModelId, ...ModelId[]]);
 const styleSchema = z.enum(["standard", "concise", "caveman", "ultra"]);
 
 const server = new McpServer({
@@ -19,7 +25,7 @@ server.registerTool(
     description: "Analyze prompt text for token count, cost estimates, segments, waste, and optimization savings.",
     inputSchema: {
       text: z.string().describe("Prompt or context text to analyze."),
-      model: modelSchema.default("gpt-4o").describe("Model tokenization profile."),
+      model: modelSchema.default(DEFAULT_MODEL).describe("Model tokenization profile."),
       compressionStyle: styleSchema.default("standard").describe("Optimization style used for savings estimate.")
     }
   },
@@ -47,7 +53,7 @@ server.registerTool(
     description: "Return an optimized prompt using context-doctor waste detection and compression styles.",
     inputSchema: {
       text: z.string().describe("Prompt or context text to optimize."),
-      model: modelSchema.default("gpt-4o").describe("Model tokenization profile."),
+      model: modelSchema.default(DEFAULT_MODEL).describe("Model tokenization profile."),
       compressionStyle: styleSchema.default("concise").describe("Optimization style to apply.")
     }
   },

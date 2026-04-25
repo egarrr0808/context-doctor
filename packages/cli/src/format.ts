@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import Table from "cli-table3";
+import { MODEL_PRICING } from "@context-doctor/core";
 
 import type { AnalysisResult, Segment, WasteItem } from "@context-doctor/core";
 
@@ -82,7 +83,7 @@ export function formatCosts(result: AnalysisResult): string {
   });
 
   for (const [model, cost] of Object.entries(result.costEstimates)) {
-    table.push([model, `$${cost.toFixed(6)}`]);
+    table.push([MODEL_PRICING[model]?.label ?? model, `$${cost.toFixed(6)}`]);
   }
 
   return `${chalk.bold("Cost Estimate")}\n${table.toString()}`;
@@ -109,7 +110,7 @@ export function formatNextSteps(result: AnalysisResult): string {
       ? `Largest segment: ${worstSegment.label} (${worstSegment.tokenCount} tokens).`
       : "No segments detected.",
     cheapest
-      ? `Cheapest listed model for this prompt: ${cheapest[0]} ($${cheapest[1].toFixed(6)} input).`
+      ? `Cheapest listed model for this prompt: ${MODEL_PRICING[cheapest[0]]?.label ?? cheapest[0]} ($${cheapest[1].toFixed(6)} input).`
       : "No cost data available.",
     result.estimatedSavings > 0
       ? `Try: context-doctor analyze <file> --fix --style concise`
@@ -139,7 +140,9 @@ export function formatAnalysisMarkdown(result: AnalysisResult): string {
     "",
     "| Model | Estimated input cost |",
     "| --- | ---: |",
-    ...Object.entries(result.costEstimates).map(([model, cost]) => `| ${model} | $${cost.toFixed(6)} |`),
+    ...Object.entries(result.costEstimates).map(
+      ([model, cost]) => `| ${MODEL_PRICING[model]?.label ?? model} | $${cost.toFixed(6)} |`
+    ),
     "",
     "## Segments",
     "",

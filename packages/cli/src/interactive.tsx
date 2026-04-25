@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Box, render, Text, useApp } from "ink";
 import TextInput from "ink-text-input";
 
-import { analyzePrompt, type ModelId } from "@context-doctor/core";
+import { analyzePrompt, DEFAULT_MODEL, type ModelId } from "@context-doctor/core";
 
 function InteractiveApp(): React.JSX.Element {
   const [input, setInput] = useState("<system>\nYou are a helpful assistant.\n</system>\n\n<user>\nPaste prompt here.\n</user>\n");
-  const [model] = useState<ModelId>("gpt-4o");
+  const [model] = useState<ModelId>(DEFAULT_MODEL);
   const [result, setResult] = useState(() => analyzePrompt(input, { model }));
   const { exit } = useApp();
 

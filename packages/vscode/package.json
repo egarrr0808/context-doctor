@@ -113,8 +113,17 @@
       "properties": {
         "contextDoctor.defaultModel": {
           "type": "string",
-          "enum": ["gpt-4o", "claude-3-5", "gemini-1-5", "llama-3"],
-          "default": "gpt-4o",
+          "enum": [
+            "gpt-5.5",
+            "gpt-5.4",
+            "gpt-4o",
+            "claude-opus-4.7",
+            "claude-sonnet-4.6",
+            "gemini-2.5-pro",
+            "kimi-k2.6",
+            "llama-3"
+          ],
+          "default": "gpt-5.5",
           "description": "Default model used for token analysis."
         },
         "contextDoctor.compressionStyle": {

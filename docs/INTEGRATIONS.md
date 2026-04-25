@@ -14,8 +14,8 @@ context-doctor optimize AGENTS.md -o AGENTS.optimized.md --style ultra
 Pair with Caveman-style memory compression:
 
 ```bash
-context-doctor analyze CLAUDE.md --model claude-3-5 --style caveman
-context-doctor optimize CLAUDE.md -o CLAUDE.compact.md --model claude-3-5 --style ultra
+context-doctor analyze CLAUDE.md --model claude-opus-4.7 --style caveman
+context-doctor optimize CLAUDE.md -o CLAUDE.compact.md --model claude-opus-4.7 --style ultra
 ```
 
 The `caveman` and `ultra` styles are deterministic, local, and inspired by the Caveman plugin pattern: remove filler, shorten common technical words, preserve technical signal, keep code fences intact.
@@ -23,7 +23,7 @@ The `caveman` and `ultra` styles are deterministic, local, and inspired by the C
 ## Gemini CLI
 
 ```bash
-context-doctor analyze GEMINI.md --model gemini-1-5 --style concise
+context-doctor analyze GEMINI.md --model gemini-2.5-pro --style concise
 ```
 
 ## Cursor, Windsurf, Cline
