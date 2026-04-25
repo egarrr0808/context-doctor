@@ -37,7 +37,7 @@ Local source install:
 - Segment-aware token analysis for `system`, `user`, `assistant`, XML blocks, code fences, free text.
 - Waste detection for repeated instructions, filler phrasing, duplicate context, whitespace bloat, weak system prompts, noisy code comments.
 - Auto-optimization pipeline with estimated savings, fixed prompt output, watch mode, compare mode, shell completions, interactive TUI, VS Code diagnostics.
-- Compression styles: `standard`, `concise`, `caveman`, `ultra`.
+- Compression styles: `standard`, `concise`, `lite`, `caveman`, `full`, `ultra`.
 - Cost estimates for GPT-5.5, GPT-5.4, GPT-4o, Claude Opus 4.7, Claude Sonnet 4.6, Gemini 2.5 Pro, and Kimi K2.6.
 
 ## Quick usage
@@ -129,6 +129,33 @@ Aliases accepted in CLI and MCP: `5.5 chatgpt`, `claude 4.7`, `kimi 2.6`, `gemin
 6. It can print an optimized prompt or write it to a new file.
 
 Use `--style concise` for normal cleanup, `--style caveman` for agent memory, and `--style ultra` when token budget matters more than human prose.
+
+## Caveman Mode
+
+`context-doctor` now includes Caveman-style prompting logic modeled on the same `lite / full / ultra` idea:
+
+- `lite`: remove filler, keep full sentences.
+- `full` or `caveman`: drop articles, allow fragments, keep technical signal.
+- `ultra`: abbreviate hard (`DB`, `auth`, `req`, `res`, `fn`, arrows for cause/effect).
+
+See how your prompt changes:
+
+```bash
+context-doctor caveman prompt.md --level full
+```
+
+Write in place with backup:
+
+```bash
+context-doctor caveman CLAUDE.md --level ultra --write --backup
+```
+
+Export same prompting rules for external tools:
+
+```bash
+context-doctor export-caveman --target claude --level full -o CLAUDE.caveman.md
+context-doctor export-caveman --target cursor --level ultra -o .cursor/rules/caveman.md
+```
 
 ## Cost Estimator
 

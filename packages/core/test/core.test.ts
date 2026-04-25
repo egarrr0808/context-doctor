@@ -106,4 +106,10 @@ describe("compression", () => {
       countTokensForEncoding(input, "o200k_base")
     );
   });
+
+  it("includes caveman style benchmarks", () => {
+    const result = analyzePrompt(SAMPLE_PROMPT, { model: "gpt-5.5" });
+    expect(result.styleBenchmarks).toHaveLength(3);
+    expect(result.styleBenchmarks.some((entry) => entry.style === "full")).toBe(true);
+  });
 });

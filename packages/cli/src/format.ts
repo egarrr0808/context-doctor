@@ -2,7 +2,7 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import { MODEL_PRICING } from "@context-doctor/core";
 
-import type { AnalysisResult, Segment, WasteItem } from "@context-doctor/core";
+import type { AnalysisResult, CompressionBenchmark, Segment, WasteItem } from "@context-doctor/core";
 
 function utilizationColor(utilizationPercent: number) {
   if (utilizationPercent > 90) {
@@ -94,9 +94,36 @@ export function formatAnalysisTable(result: AnalysisResult): string {
     formatSummary(result),
     formatSegments(result),
     formatCosts(result),
+    formatBenchmarks(result),
     formatWaste(result),
     formatNextSteps(result)
   ].join("\n\n");
+}
+
+function benchmarkLabel(style: CompressionBenchmark["style"]): string {
+  if (style === "full") {
+    return "caveman-full";
+  }
+  return `caveman-${style}`;
+}
+
+export function formatBenchmarks(result: AnalysisResult): string {
+  const table = new Table({
+    head: ["Style", "Tokens", "Saved", "Saved %", "Est. input cost"],
+    style: { head: ["cyan"] }
+  });
+
+  for (const benchmark of result.styleBenchmarks) {
+    table.push([
+      benchmarkLabel(benchmark.style),
+      String(benchmark.tokens),
+      String(benchmark.savedTokens),
+      `${benchmark.savedPercent.toFixed(1)}%`,
+      `$${benchmark.estimatedInputCost.toFixed(6)}`
+    ]);
+  }
+
+  return `${chalk.bold("Caveman Benchmarks")}\n${table.toString()}`;
 }
 
 export function formatNextSteps(result: AnalysisResult): string {
@@ -142,6 +169,15 @@ export function formatAnalysisMarkdown(result: AnalysisResult): string {
     "| --- | ---: |",
     ...Object.entries(result.costEstimates).map(
       ([model, cost]) => `| ${MODEL_PRICING[model]?.label ?? model} | $${cost.toFixed(6)} |`
+    ),
+    "",
+    "## Caveman Benchmarks",
+    "",
+    "| Style | Tokens | Saved | Saved % | Estimated input cost |",
+    "| --- | ---: | ---: | ---: | ---: |",
+    ...result.styleBenchmarks.map(
+      (benchmark) =>
+        `| ${benchmarkLabel(benchmark.style)} | ${benchmark.tokens} | ${benchmark.savedTokens} | ${benchmark.savedPercent.toFixed(1)}% | $${benchmark.estimatedInputCost.toFixed(6)} |`
     ),
     "",
     "## Segments",

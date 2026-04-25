@@ -128,7 +128,7 @@
         },
         "contextDoctor.compressionStyle": {
           "type": "string",
-          "enum": ["standard", "concise", "caveman", "ultra"],
+          "enum": ["standard", "concise", "lite", "caveman", "full", "ultra"],
           "default": "concise",
           "description": "Compression style used by optimization commands."
         },

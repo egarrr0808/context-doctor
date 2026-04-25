@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import {
   analyzePrompt,
+  buildCavemanPrompt,
   DEFAULT_MODEL,
   MODEL_IDS,
   MODEL_PROFILES,
@@ -22,7 +23,14 @@ const program = new Command();
 
 type OutputFormat = "table" | "json" | "markdown";
 const OUTPUT_FORMATS = new Set<OutputFormat>(["table", "json", "markdown"]);
-const COMPRESSION_STYLES = new Set<CompressionStyle>(["standard", "concise", "caveman", "ultra"]);
+const COMPRESSION_STYLES = new Set<CompressionStyle>([
+  "standard",
+  "concise",
+  "lite",
+  "caveman",
+  "full",
+  "ultra"
+]);
 
 function printResult(result: AnalysisResult, format: OutputFormat): void {
   if (format === "json") {
@@ -71,10 +79,20 @@ function parseFormat(format: string): OutputFormat {
 }
 
 function parseStyle(style: string): CompressionStyle {
-  if (COMPRESSION_STYLES.has(style as CompressionStyle)) {
-    return style as CompressionStyle;
+  const normalized = style.toLowerCase();
+  const aliases: Record<string, CompressionStyle> = {
+    standard: "standard",
+    concise: "concise",
+    lite: "lite",
+    caveman: "caveman",
+    full: "full",
+    ultra: "ultra"
+  };
+
+  if (aliases[normalized] && COMPRESSION_STYLES.has(aliases[normalized])) {
+    return aliases[normalized];
   }
-  throw new Error(`Unknown style "${style}". Use: standard, concise, caveman, ultra`);
+  throw new Error(`Unknown style "${style}". Use: standard, concise, lite, caveman, full, ultra`);
 }
 
 function completionScript(shell: string): string {
@@ -86,21 +104,21 @@ function completionScript(shell: string): string {
       `complete -c context-doctor -f -a "${commands}"`,
       `complete -c context-doctor -l model -a "${MODEL_IDS.join(" ")}"`,
       `complete -c context-doctor -l format -a "table json markdown"`,
-      `complete -c context-doctor -l style -a "standard concise caveman ultra"`
+      `complete -c context-doctor -l style -a "standard concise lite caveman full ultra"`
     ].join("\n");
   }
 
   if (shell === "powershell" || shell === "pwsh") {
     return `Register-ArgumentCompleter -Native -CommandName context-doctor -ScriptBlock {
   param($wordToComplete)
-  "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise caveman ultra".Split(" ") |
+  "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise lite caveman full ultra".Split(" ") |
     Where-Object { $_ -like "$wordToComplete*" } |
     ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, "ParameterValue", $_) }
 }`;
   }
 
   return `_context_doctor() {
-  COMPREPLY=($(compgen -W "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise caveman ultra" -- "\${COMP_WORDS[COMP_CWORD]}"))
+  COMPREPLY=($(compgen -W "${commands} ${options} ${MODEL_IDS.join(" ")} table json markdown standard concise lite caveman full ultra" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
 complete -F _context_doctor context-doctor`;
 }
@@ -178,7 +196,7 @@ program
   .argument("<file>", "file path or - for stdin")
   .option("--model <model>", "target model", DEFAULT_MODEL)
   .option("--format <format>", "table|json|markdown", "table")
-  .option("--style <style>", "standard|concise|caveman|ultra", "standard")
+  .option("--style <style>", "standard|concise|lite|caveman|full|ultra", "standard")
   .option("--fix", "print optimized prompt")
   .option("--watch", "watch file for changes")
   .action(async (file, options) => {
@@ -226,7 +244,7 @@ program
   .argument("<file>")
   .requiredOption("-o, --output <output>", "output file")
   .option("--model <model>", "target model", DEFAULT_MODEL)
-  .option("--style <style>", "standard|concise|caveman|ultra", "concise")
+  .option("--style <style>", "standard|concise|lite|caveman|full|ultra", "concise")
   .action(async (file, options) => {
     const model = parseModel(options.model);
     const style = parseStyle(options.style);
@@ -272,9 +290,74 @@ Main commands:
 Compression styles:
   standard   safe phrase cleanup
   concise    stronger cleanup for normal prompts
-  caveman    terse technical memory style
+  lite       caveman logic, but keep full sentences
+  caveman    classic caveman mode
+  full       alias for caveman
   ultra      maximum deterministic compression
 `);
+  });
+
+program
+  .command("caveman")
+  .argument("<file>", "file path or - for stdin")
+  .option("--model <model>", "target model", DEFAULT_MODEL)
+  .option("--level <style>", "lite|full|ultra", "full")
+  .option("--write", "overwrite file with caveman output")
+  .option("--backup", "write <file>.original backup when using --write")
+  .description("Apply Caveman compression and show before/after usage")
+  .action(async (file, options) => {
+    const model = parseModel(options.model);
+    const style = parseStyle(options.level);
+    const input = await readInput(file);
+    const result = analyzePrompt(input, { model, compressionStyle: style });
+    const benchmark = result.styleBenchmarks.find((entry) => entry.style === (style === "caveman" ? "full" : style));
+
+    if (!benchmark) {
+      throw new Error(`No Caveman benchmark for style "${style}"`);
+    }
+
+    console.log(formatAnalysisTable(result));
+    console.log("\n--- caveman prompt rules ---\n");
+    console.log(buildCavemanPrompt(benchmark.style as "lite" | "full" | "ultra"));
+    console.log("\n--- caveman output ---\n");
+    console.log(benchmark.optimizedPrompt);
+
+    if (options.write) {
+      if (file === "-") {
+        throw new Error("Cannot use --write with stdin.");
+      }
+      if (options.backup) {
+        await writeFile(`${file}.original`, input, "utf8");
+      }
+      await writeFile(file, benchmark.optimizedPrompt, "utf8");
+      console.log(`\nUpdated ${file}. Saved ~${benchmark.savedTokens} tokens with caveman-${benchmark.style}.`);
+    }
+  });
+
+program
+  .command("export-caveman")
+  .option("--target <target>", "claude|cursor|codex|cline", "claude")
+  .option("--level <style>", "lite|full|ultra", "full")
+  .option("-o, --output <output>", "write to file instead of stdout")
+  .description("Export Caveman prompt rules for external agent tools")
+  .action(async (options) => {
+    const level = parseStyle(options.level);
+    if (!["lite", "full", "ultra", "caveman"].includes(level)) {
+      throw new Error("Caveman export supports lite, full, ultra.");
+    }
+
+    const prompt = buildToolPreset(
+      options.target,
+      buildCavemanPrompt(level === "caveman" ? "full" : (level as "lite" | "full" | "ultra"))
+    );
+
+    if (options.output) {
+      await writeFile(options.output, prompt, "utf8");
+      console.log(`Wrote Caveman preset to ${options.output}`);
+      return;
+    }
+
+    console.log(prompt);
   });
 
 program
@@ -353,3 +436,15 @@ program
   });
 
 program.parseAsync(process.argv);
+
+function buildToolPreset(target: string, prompt: string): string {
+  if (target === "cursor" || target === "cline") {
+    return `# Context Doctor Caveman preset\n\n${prompt}\n`;
+  }
+
+  if (target === "codex") {
+    return `# Add to AGENTS.md or local tool memory\n\n${prompt}\n`;
+  }
+
+  return `# Add to CLAUDE.md or custom instructions\n\n${prompt}\n`;
+}

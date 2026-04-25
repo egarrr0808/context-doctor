@@ -28,7 +28,13 @@ export type WasteType =
   | "filler-language"
   | "long-list-boilerplate";
 
-export type CompressionStyle = "standard" | "concise" | "caveman" | "ultra";
+export type CompressionStyle =
+  | "standard"
+  | "concise"
+  | "lite"
+  | "caveman"
+  | "full"
+  | "ultra";
 
 export interface LocationRange {
   start: number;
@@ -70,5 +76,15 @@ export interface AnalysisResult {
   wasteItems: WasteItem[];
   estimatedSavings: number;
   costEstimates: Record<string, number>;
+  styleBenchmarks: CompressionBenchmark[];
+  optimizedPrompt: string;
+}
+
+export interface CompressionBenchmark {
+  style: CompressionStyle;
+  tokens: number;
+  savedTokens: number;
+  savedPercent: number;
+  estimatedInputCost: number;
   optimizedPrompt: string;
 }

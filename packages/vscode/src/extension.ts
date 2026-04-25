@@ -136,6 +136,12 @@ class ContextDoctorProvider
           `<tr><td>${escapeHtml(MODEL_PRICING[model]?.label ?? model)}</td><td>$${cost.toFixed(6)}</td></tr>`
       )
       .join("");
+    const benchmarkRows = result.styleBenchmarks
+      .map(
+        (entry) =>
+          `<tr><td>${escapeHtml(entry.style === "full" ? "caveman-full" : `caveman-${entry.style}`)}</td><td>${entry.tokens}</td><td>${entry.savedTokens}</td><td>${entry.savedPercent.toFixed(1)}%</td></tr>`
+      )
+      .join("");
     const segmentRows = result.segments
       .map(
         (segment) =>
@@ -263,6 +269,9 @@ class ContextDoctorProvider
 
   <h2>Cost</h2>
   <table><thead><tr><th>Model</th><th>Input cost</th></tr></thead><tbody>${costRows}</tbody></table>
+
+  <h2>Caveman Benchmarks</h2>
+  <table><thead><tr><th>Style</th><th>Tokens</th><th>Saved</th><th>Saved %</th></tr></thead><tbody>${benchmarkRows}</tbody></table>
 
   <h2>Segments</h2>
   <table><thead><tr><th>Segment</th><th>Tokens</th><th>% total</th></tr></thead><tbody>${segmentRows}</tbody></table>
@@ -458,7 +467,7 @@ export function activate(context: vscode.ExtensionContext): void {
       provider.setModel(picked.id);
     }),
     vscode.commands.registerCommand("contextDoctor.selectCompressionStyle", async () => {
-      const picked = await vscode.window.showQuickPick(["standard", "concise", "caveman", "ultra"]);
+      const picked = await vscode.window.showQuickPick(["standard", "concise", "lite", "caveman", "full", "ultra"]);
       if (!picked) {
         return;
       }

@@ -36,6 +36,32 @@ const result: AnalysisResult = {
     "gemini-2.5-pro": 0.0015,
     "kimi-k2.6": 0.00072
   },
+  styleBenchmarks: [
+    {
+      style: "lite",
+      tokens: 1100,
+      savedTokens: 100,
+      savedPercent: 8.3,
+      estimatedInputCost: 0.0022,
+      optimizedPrompt: "lite"
+    },
+    {
+      style: "full",
+      tokens: 900,
+      savedTokens: 300,
+      savedPercent: 25,
+      estimatedInputCost: 0.0018,
+      optimizedPrompt: "full"
+    },
+    {
+      style: "ultra",
+      tokens: 800,
+      savedTokens: 400,
+      savedPercent: 33.3,
+      estimatedInputCost: 0.0016,
+      optimizedPrompt: "ultra"
+    }
+  ],
   estimatedSavings: 6,
   optimizedPrompt: "must"
 };
@@ -45,6 +71,7 @@ describe("cli formatting", () => {
     const output = formatAnalysisTable(result);
     expect(output).toContain("Context Summary");
     expect(output).toContain("Cost Estimate");
+    expect(output).toContain("Caveman Benchmarks");
     expect(output).toContain("Waste Items");
     expect(output).toContain("Run with --fix");
   });
@@ -53,6 +80,7 @@ describe("cli formatting", () => {
     const output = formatAnalysisMarkdown(result);
     expect(output).toContain("# Context Doctor Report");
     expect(output).toContain("## Cost Estimate");
+    expect(output).toContain("## Caveman Benchmarks");
     expect(output).toContain("| Segment | Tokens | % total | Status |");
   });
 });

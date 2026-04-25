@@ -1,5 +1,5 @@
 export { analyzePrompt } from "./analyze";
-export { compressPrompt } from "./compress";
+export { buildCavemanPrompt, compressPrompt } from "./compress";
 export { estimateInputCosts, MODEL_PRICING } from "./costs";
 export { DEFAULT_MODEL, MODEL_ALIASES, MODEL_IDS, MODEL_PROFILES, normalizeModelId } from "./models";
 export { applyOptimizations } from "./optimize";
@@ -9,6 +9,7 @@ export { detectWaste } from "./waste";
 export type {
   AnalysisOptions,
   AnalysisResult,
+  CompressionBenchmark,
   CompressionStyle,
   LocationRange,
   ModelId,
