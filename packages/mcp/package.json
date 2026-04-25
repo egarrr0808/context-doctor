@@ -1,0 +1,57 @@
+{
+  "name": "@context-doctor/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for context-doctor analysis and optimization.",
+  "license": "MIT",
+  "homepage": "https://github.com/egarrr0808/context-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/egarrr0808/context-doctor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/egarrr0808/context-doctor.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "llm",
+    "tokens",
+    "context-window",
+    "prompt",
+    "optimization",
+    "ai",
+    "claude",
+    "gpt",
+    "cursor",
+    "openai"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "bin": {
+    "context-doctor-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup src/index.ts --watch --format esm,cjs --dts",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pack": "npm pack",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@context-doctor/core": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

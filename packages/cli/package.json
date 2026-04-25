@@ -1,0 +1,63 @@
+{
+  "name": "context-doctor",
+  "version": "0.1.0",
+  "description": "CLI for analyzing and optimizing LLM context windows.",
+  "license": "MIT",
+  "homepage": "https://github.com/egarrr0808/context-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/egarrr0808/context-doctor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/egarrr0808/context-doctor.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "llm",
+    "tokens",
+    "context-window",
+    "prompt",
+    "optimization",
+    "ai",
+    "claude",
+    "gpt",
+    "cursor",
+    "openai"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "bin": {
+    "context-doctor": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/interactive.tsx --format esm,cjs --dts --clean --splitting false",
+    "dev": "tsup src/index.ts src/interactive.tsx --watch --format esm,cjs --dts --splitting false",
+    "test": "vitest run",
+    "pack": "npm pack",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@context-doctor/core": "0.1.0",
+    "chalk": "^5.6.2",
+    "chokidar": "^4.0.3",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.1",
+    "ink": "^6.3.1",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "tsup": "^8.5.1"
+  }
+}

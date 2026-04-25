@@ -1,0 +1,54 @@
+{
+  "name": "@context-doctor/core",
+  "version": "0.1.0",
+  "description": "Core analysis engine for LLM context windows.",
+  "license": "MIT",
+  "homepage": "https://github.com/egarrr0808/context-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/egarrr0808/context-doctor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/egarrr0808/context-doctor.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "llm",
+    "tokens",
+    "context-window",
+    "prompt",
+    "optimization",
+    "ai",
+    "claude",
+    "gpt",
+    "cursor",
+    "openai"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup src/index.ts --watch --format esm,cjs --dts",
+    "test": "vitest run",
+    "pack": "npm pack",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@anthropic-ai/tokenizer": "^0.0.4",
+    "tiktoken": "^1.0.22"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

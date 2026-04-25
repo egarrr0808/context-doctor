@@ -1,0 +1,25 @@
+<system>
+You are a helpful assistant.
+Please make sure that you provide an explanation that is clear.
+Please make sure that you provide an explanation that is clear.
+</system>
+
+<user>
+In order to summarize this document, take into consideration all facts.
+Basically, just keep the response focused.
+</user>
+
+<document>
+Context Doctor analyzes LLM context windows, finds duplicate content, estimates costs, and suggests compression.
+</document>
+
+<document>
+Context Doctor analyzes LLM context windows, finds duplicate content, estimates costs, and suggests compression.
+</document>
+
+
+
+```ts
+// this helper function is basically obvious and not needed in prompt context
+const summarize = (text: string) => text.trim();
+```

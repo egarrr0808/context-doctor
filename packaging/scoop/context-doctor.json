@@ -1,0 +1,18 @@
+{
+  "version": "0.1.0",
+  "description": "Analyze and optimize LLM context windows.",
+  "homepage": "https://github.com/context-doctor/context-doctor",
+  "license": "MIT",
+  "depends": "nodejs",
+  "url": "https://registry.npmjs.org/context-doctor/-/context-doctor-0.1.0.tgz",
+  "hash": "REPLACE_WITH_NPM_TARBALL_SHA256",
+  "extract_dir": "package",
+  "bin": "dist/index.js",
+  "checkver": {
+    "url": "https://registry.npmjs.org/context-doctor/latest",
+    "jsonpath": "$.version"
+  },
+  "autoupdate": {
+    "url": "https://registry.npmjs.org/context-doctor/-/context-doctor-$version.tgz"
+  }
+}

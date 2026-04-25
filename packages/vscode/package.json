@@ -1,0 +1,144 @@
+{
+  "name": "context-doctor-vscode",
+  "displayName": "Context Doctor",
+  "version": "0.1.0",
+  "description": "Analyze and optimize LLM context windows in VS Code.",
+  "license": "MIT",
+  "homepage": "https://github.com/egarrr0808/context-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/egarrr0808/context-doctor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/egarrr0808/context-doctor.git",
+    "directory": "packages/vscode"
+  },
+  "publisher": "egarrr0808",
+  "icon": "media/icon.png",
+  "engines": {
+    "node": ">=18",
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other",
+    "Linters"
+  ],
+  "keywords": [
+    "tokens",
+    "llm",
+    "context",
+    "prompt",
+    "ai"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:contextDoctor.openAnalysisPanel",
+    "onCommand:contextDoctor.analyzeCurrentFile",
+    "onCommand:contextDoctor.optimizeCurrentFile",
+    "onCommand:contextDoctor.compareWithClipboard"
+  ],
+  "main": "./dist/extension.js",
+  "files": [
+    "dist",
+    "media",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup src/extension.ts --format cjs --clean --out-dir dist --external vscode",
+    "dev": "tsup src/extension.ts --watch --format cjs --clean --out-dir dist --external vscode",
+    "test": "vitest run --passWithNoTests",
+    "package": "vsce package --no-dependencies",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@context-doctor/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+    "tsup": "^8.5.1"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "contextDoctor.analyzeCurrentFile",
+        "title": "Context Doctor: Analyze Current File"
+      },
+      {
+        "command": "contextDoctor.optimizeCurrentFile",
+        "title": "Context Doctor: Optimize (apply all fixes)"
+      },
+      {
+        "command": "contextDoctor.compareWithClipboard",
+        "title": "Context Doctor: Compare with Clipboard"
+      },
+      {
+        "command": "contextDoctor.openAnalysisPanel",
+        "title": "Context Doctor: Open Dashboard"
+      },
+      {
+        "command": "contextDoctor.selectModel",
+        "title": "Context Doctor: Select Model"
+      },
+      {
+        "command": "contextDoctor.selectCompressionStyle",
+        "title": "Context Doctor: Select Compression Style"
+      },
+      {
+        "command": "contextDoctor.applyWasteFix",
+        "title": "Context Doctor: Apply Waste Fix"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "contextDoctor",
+          "title": "Context Doctor",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "contextDoctor": [
+        {
+          "id": "contextDoctor.sidebar",
+          "name": "Analysis"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Context Doctor",
+      "properties": {
+        "contextDoctor.defaultModel": {
+          "type": "string",
+          "enum": ["gpt-4o", "claude-3-5", "gemini-1-5", "llama-3"],
+          "default": "gpt-4o",
+          "description": "Default model used for token analysis."
+        },
+        "contextDoctor.compressionStyle": {
+          "type": "string",
+          "enum": ["standard", "concise", "caveman", "ultra"],
+          "default": "concise",
+          "description": "Compression style used by optimization commands."
+        },
+        "contextDoctor.warningThreshold": {
+          "type": "number",
+          "default": 70,
+          "description": "Warning threshold for context utilization."
+        },
+        "contextDoctor.criticalThreshold": {
+          "type": "number",
+          "default": 90,
+          "description": "Critical threshold for context utilization."
+        },
+        "contextDoctor.autoAnalyze": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically analyze active editor content."
+        }
+      }
+    }
+  }
+}

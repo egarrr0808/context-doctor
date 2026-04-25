@@ -1,0 +1,94 @@
+name: Context Check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  context-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Analyze changed context files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execFileSync } = require("node:child_process");
+            const { existsSync, readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+
+            const base = context.payload.pull_request.base.sha;
+            const head = context.payload.pull_request.head.sha;
+            const changed = execFileSync("git", ["diff", "--name-only", `${base}...${head}`], { encoding: "utf8" })
+              .split("\n")
+              .filter((file) => /\.(md|txt|prompt)$/i.test(file));
+
+            if (changed.length === 0) {
+              core.info("No changed context files.");
+              return;
+            }
+
+            const rows = [];
+            let failed = false;
+
+            for (const file of changed) {
+              if (!existsSync(file)) continue;
+
+              const current = JSON.parse(execFileSync("node", ["packages/cli/dist/index.js", "analyze", file, "--format", "json"], { encoding: "utf8" }));
+              const tempDir = mkdtempSync(join(tmpdir(), "context-doctor-"));
+              const baseFile = join(tempDir, file.replace(/[\\/]/g, "__"));
+
+              let baseTokens = 0;
+              try {
+                const baseContent = execFileSync("git", ["show", `${base}:${file}`], { encoding: "utf8" });
+                writeFileSync(baseFile, baseContent);
+                baseTokens = JSON.parse(execFileSync("node", ["packages/cli/dist/index.js", "analyze", baseFile, "--format", "json"], { encoding: "utf8" })).totalTokens;
+              } catch {
+                baseTokens = current.totalTokens;
+              }
+
+              const changePercent = baseTokens === 0 ? 0 : ((current.totalTokens - baseTokens) / baseTokens) * 100;
+              if (changePercent > 20) failed = true;
+
+              rows.push({
+                file,
+                baseTokens,
+                currentTokens: current.totalTokens,
+                changePercent,
+                estimatedSavings: current.estimatedSavings,
+                wasteItems: current.wasteItems.length
+              });
+            }
+
+            const body = [
+              "## Context Doctor",
+              "",
+              "| File | Base tokens | PR tokens | Change | Est. savings | Waste items |",
+              "| --- | ---: | ---: | ---: | ---: | ---: |",
+              ...rows.map((row) => `| \`${row.file}\` | ${row.baseTokens} | ${row.currentTokens} | ${row.changePercent.toFixed(1)}% | ${row.estimatedSavings} | ${row.wasteItems} |`),
+              "",
+              failed ? "**Result:** failed because token count increased by more than 20%." : "**Result:** passed."
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+            if (failed) {
+              core.setFailed("Context token count increased by more than 20%.");
+            }
